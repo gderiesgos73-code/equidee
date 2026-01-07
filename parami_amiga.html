@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Para ti 🌹</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Poppins:wght@300;500&display=swap" rel="stylesheet">
+
+    <style>
+        /* --- Estilos Generales --- */
+        body {
+            margin: 0;
+            padding: 0;
+            height: 100vh; /* Altura completa */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            /* Fondo con degradado suave pero elegante */
+            background: linear-gradient(135deg, #fff0f5 0%, #ffe4e1 100%);
+            font-family: 'Poppins', sans-serif;
+            overflow: hidden; /* Evita scroll cuando el botón se mueve */
+        }
+
+        /* --- La Tarjeta (El contenedor blanco) --- */
+        .card {
+            background-color: rgba(255, 255, 255, 0.95);
+            padding: 30px 20px;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(158, 27, 50, 0.1);
+            text-align: center;
+            width: 90%;
+            max-width: 400px;
+            border: 2px solid #9e1b32; /* Rojo Arequipa sutil */
+            position: relative;
+            z-index: 10;
+            transition: transform 0.3s ease;
+        }
+
+        /* --- Tipografía --- */
+        h1 {
+            font-family: 'Dancing Script', cursive;
+            color: #9e1b32;
+            font-size: 2.5rem;
+            margin: 0 0 15px 0;
+            line-height: 1.2;
+        }
+
+        p {
+            font-size: 1rem;
+            color: #555;
+            line-height: 1.6;
+            margin-bottom: 25px;
+        }
+
+        .highlight {
+            color: #9e1b32;
+            font-weight: 600;
+        }
+
+        /* --- Imagen o Emoji --- */
+        .emoji-container {
+            font-size: 60px;
+            margin-bottom: 10px;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+            100% { transform: translateY(0px); }
+        }
+
+        /* --- Botones --- */
+        .btn-container {
+            display: flex;
+            justify-content: space-between; /* Separados extremos */
+            align-items: center;
+            margin-top: 20px;
+            height: 50px; /* Espacio reservado */
+            position: relative;
+        }
+
+        button {
+            padding: 12px 20px;
+            font-family: 'Poppins', sans-serif;
+            font-size: 0.95rem;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: transform 0.2s, box-shadow 0.2s;
+            width: 45%; /* Para que ocupen casi la mitad cada uno */
+            -webkit-tap-highlight-color: transparent; /* Quita el azul al tocar en celular */
+        }
+
+        #yesBtn {
+            background-color: #9e1b32;
+            color: white;
+            box-shadow: 0 4px 15px rgba(158, 27, 50, 0.2);
+        }
+
+        #yesBtn:active {
+            transform: scale(0.95);
+        }
+
+        #noBtn {
+            background-color: #f3f4f6;
+            color: #666;
+            border: 1px solid #ddd;
+        }
+
+        /* Clase para cuando el botón empieza a moverse */
+        .moving {
+            position: fixed !important;
+            width: auto !important; /* Vuelve a tamaño automático */
+            z-index: 100;
+        }
+
+        /* --- Mensaje Final --- */
+        .hidden { display: none; }
+        
+        .fade-in {
+            animation: appear 1s ease forwards;
+        }
+
+        @keyframes appear {
+            from { opacity: 0; transform: scale(0.9); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        /* --- Ajustes Específicos para Celulares Pequeños --- */
+        @media (max-width: 380px) {
+            h1 { font-size: 2rem; }
+            p { font-size: 0.9rem; }
+            .card { padding: 25px 15px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="card" id="mainCard">
+        <div class="emoji-container">🌋✨</div>
+        
+        <h1>Un recordatorio...</h1>
+        
+        <p>
+            Entra a esta página cada que tengas dudas de lo <span class="highlight">bonita que eres</span>, oye. Y no hablo solo físicamente, sino de todo lo que eres.
+            <br><br>
+            A veces se nos olvida, así que... <br>
+            <strong>¿Te quedó claro lo increíble que eres?</strong>
+        </p>
+
+        <div class="btn-container">
+            <button id="yesBtn">¡Sí, obvio!</button>
+            <button id="noBtn">Mmm, dudo...</button>
+        </div>
+    </div>
+
+    <div class="card hidden" id="successMessage">
+        <div class="emoji-container"></div>
+        <h1>¡Sabía que dirías que sí!</h1>
+        <p>
+            <br><br>
+            Guarda este link para cuando necesites recordarlo.
+        </p>
+    </div>
+
+    <script>
+        const noBtn = document.getElementById('noBtn');
+        const yesBtn = document.getElementById('yesBtn');
+        const mainCard = document.getElementById('mainCard');
+        const successMessage = document.getElementById('successMessage');
+        let isMoving = false;
+
+        // --- LÓGICA DEL BOTÓN QUE SE ESCAPA ---
+        
+        // Detectar tanto Mouse (PC) como Touch (Celular)
+        const events = ['mouseover', 'touchstart'];
+        
+        events.forEach(event => {
+            noBtn.addEventListener(event, (e) => {
+                // Prevenir comportamiento por defecto en celular para que no haga "click"
+                if(event === 'touchstart') e.preventDefault();
+                moveButton();
+            });
+        });
+
+        function moveButton() {
+            // Si es la primera vez, cambiamos a fixed
+            if (!isMoving) {
+                noBtn.classList.add('moving');
+                isMoving = true;
+            }
+
+            // Calculamos el área disponible (ventana - tamaño botón - margen seguridad)
+            const buttonWidth = noBtn.offsetWidth;
+            const buttonHeight = noBtn.offsetHeight;
+            const maxX = window.innerWidth - buttonWidth - 20;
+            const maxY = window.innerHeight - buttonHeight - 20;
+
+            // Posición aleatoria
+            const randomX = Math.max(10, Math.random() * maxX);
+            const randomY = Math.max(10, Math.random() * maxY);
+
+            // Aplicamos coordenadas
+            noBtn.style.left = randomX + 'px';
+            noBtn.style.top = randomY + 'px';
+        }
+
+        // --- LÓGICA DEL BOTÓN SÍ ---
+        yesBtn.addEventListener('click', () => {
+            mainCard.style.display = 'none'; // Oculta pregunta
+            if (isMoving) noBtn.style.display = 'none'; // Oculta el botón 'No' si andaba flotando
+            
+            successMessage.classList.remove('hidden'); // Muestra mensaje
+            successMessage.classList.add('fade-in');
+            
+            celebrar(); // Lanza confeti
+        });
+
+        // --- CONFETI SIMPLE ---
+        function celebrar() {
+            const colors = ['#9e1b32', '#ffc107', '#ff69b4', '#fff'];
+            
+            for (let i = 0; i < 50; i++) {
+                const confeti = document.createElement('div');
+                confeti.style.position = 'fixed';
+                confeti.style.width = '10px';
+                confeti.style.height = '10px';
+                confeti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                confeti.style.left = Math.random() * 100 + 'vw';
+                confeti.style.top = '-10px';
+                confeti.style.borderRadius = '50%';
+                confeti.style.zIndex = '1000';
+                
+                // Animación css inyectada
+                confeti.style.transition = `top ${Math.random() * 2 + 2}s ease-in, transform ${Math.random() * 2 + 2}s linear`;
+                
+                document.body.appendChild(confeti);
+
+                // Forzar reflow para activar transición
+                setTimeout(() => {
+                    confeti.style.top = '110vh';
+                    confeti.style.transform = `rotate(${Math.random() * 360}deg)`;
+                }, 100);
+
+                // Limpiar elementos
+                setTimeout(() => {
+                    confeti.remove();
+                }, 4000);
+            }
+        }
+    </script>
+</body>
+</html>
